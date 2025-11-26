@@ -1,0 +1,93 @@
+[
+  {
+    "id": "1",
+    "title": "Conferință Internațională AI & Machine Learning",
+    "description": "O conferință dedicată ultimelor tendințe în inteligență artificială și învățare automată.",
+    "type": "Academic",
+    "faculty": "Informatică",
+    "location": "Aula Magna, Corp A",
+    "date": "2025-11-15T10:00",
+    "maxParticipants": 200,
+    "registered": 145,
+    "organizer": "Universitatea Tech",
+    "image": null,
+    "reviews": []
+  },
+  {
+    "id": "2",
+    "title": "Balul Bobocilor 2025",
+    "description": "Evenimentul anual pentru studenții din anul 1! Petrecere cu DJ, concursuri și premii.",
+    "type": "Social",
+    "faculty": "Toate facultățile",
+    "location": "Sala Polivalentă",
+    "date": "2025-11-20T20:00",
+    "maxParticipants": 500,
+    "registered": 432,
+    "organizer": "Consiliul Studențesc",
+    "image": null,
+    "reviews": [
+      {
+        "user": "Ana Popescu",
+        "rating": 5,
+        "comment": "Un eveniment fantastic! Muzica a fost extraordinară!",
+        "date": "2025-11-21"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Târg de Carieră Tech 2025",
+    "description": "Întâlnește cele mai mari companii tech din România. Oportunități de internship și job-uri.",
+    "type": "Carieră",
+    "faculty": "Toate facultățile",
+    "location": "Campus Central",
+    "date": "2025-11-25T09:00",
+    "maxParticipants": 1000,
+    "registered": 687,
+    "organizer": "Departamentul Cariere",
+    "image": null,
+    "reviews": []
+  },
+  {
+    "id": "4",
+    "title": "Maraton de Programare - Hackathon",
+    "description": "24 de ore de coding non-stop! Formează o echipă și creează soluții inovatoare pentru societate.",
+    "type": "Academic",
+    "faculty": "Informatică",
+    "location": "Laboratorul 401, Corp C",
+    "date": "2025-12-01T10:00",
+    "maxParticipants": 80,
+    "registered": 56,
+    "organizer": "Facultatea de Informatică",
+    "image": null,
+    "reviews": []
+  },
+  {
+    "id": "5",
+    "title": "Campionat Universitar de Fotbal",
+    "description": "Competiție inter-facultăți. Înscrie-ți echipa și luptă pentru trofeul de campioni!",
+    "type": "Sportiv",
+    "faculty": "Toate facultățile",
+    "location": "Terenul de Sport Universitar",
+    "date": "2025-11-30T14:00",
+    "maxParticipants": 160,
+    "registered": 144,
+    "organizer": "Asociația Sportivă Studențească",
+    "image": null,
+    "reviews": []
+  },
+  {
+    "id": "6",
+    "title": "Voluntariat - Curățenie în Parc",
+    "description": "Alătură-te echipei de voluntari pentru a face parcul din campus mai curat și mai verde!",
+    "type": "Voluntariat",
+    "faculty": "Toate facultățile",
+    "location": "Parcul Universității",
+    "date": "2025-11-12T09:00",
+    "maxParticipants": 50,
+    "registered": 34,
+    "organizer": "Liga Voluntarilor Universitari",
+    "image": null,
+    "reviews": []
+  }
+]
