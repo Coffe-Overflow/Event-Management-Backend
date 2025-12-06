@@ -1,0 +1,23 @@
+[
+  {
+    "id": "org1",
+    "name": "Universitatea 'Ștefan cel Mare' din Suceava",
+    "email": "contact@usv.ro",
+    "contactPerson": "Prof. Ionescu",
+    "eventsOrganized": 20
+  },
+  {
+    "id": "org2",
+    "name": "Consiliul Studențesc",
+    "email": "cs@student.ro",
+    "contactPerson": "Ana Maria Popescu",
+    "eventsOrganized": 5
+  },
+  {
+    "id": "org3",
+    "name": "Departamentul Cariere",
+    "email": "careers@usv.ro",
+    "contactPerson": "Mihai Vasilescu",
+    "eventsOrganized": 10
+  }
+]
