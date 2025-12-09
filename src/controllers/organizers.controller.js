@@ -1,61 +1,61 @@
-const fs = require('fs');
-const path = require('path');
-const organizersPath = path.join(__dirname, '../data/organizers.json');
+// src/controllers/organizers.controller.js
+const organizerService = require('../services/organizers.service'); // Importăm serviciul
 
-const getOrganizers = () => {
-    try { return JSON.parse(fs.readFileSync(organizersPath, 'utf8')); } 
-    catch (error) { return []; }
-};
-const saveOrganizers = (data) => fs.writeFileSync(organizersPath, JSON.stringify(data, null, 2));
-
-exports.createOrganizer = (req, res) => {
-    const organizers = getOrganizers();
-    // Generare ID Int
-    const maxId = organizers.length > 0 ? Math.max(...organizers.map(o => o.id)) : 0;
-    
-    const newOrganizer = {
-        id: maxId + 1, // ID Numeric
-        ...req.body,
-        eventsOrganized: 0
-    };
-    organizers.push(newOrganizer);
-    saveOrganizers(organizers);
-    res.status(201).json(newOrganizer);
-};
-
-exports.getAllOrganizers = (req, res) => res.json(getOrganizers());
-
-exports.getOrganizerById = (req, res) => {
-    const organizers = getOrganizers();
-    // parseInt pentru parametru
-    const organizer = organizers.find(o => o.id === parseInt(req.params.id));
-    if (organizer) res.json(organizer);
-    else res.status(404).json({ message: "Organizer not found" });
-};
-
-exports.updateOrganizer = (req, res) => {
-    let organizers = getOrganizers();
-    // parseInt pentru parametru
-    const index = organizers.findIndex(o => o.id === parseInt(req.params.id));
-    if (index !== -1) {
-        organizers[index] = { ...organizers[index], ...req.body };
-        saveOrganizers(organizers);
-        res.json(organizers[index]);
-    } else {
-        res.status(404).json({ message: "Organizer not found" });
+// GET /api/organizers
+exports.listOrganizers = async (req, res) => {
+    try {
+        const organizers = await organizerService.getAllOrganizers();
+        res.json(organizers);
+    } catch (error) {
+        res.status(500).json({ message: 'Eroare la obținerea listei de organizatori', error: error.message });
     }
 };
 
-exports.deleteOrganizer = (req, res) => {
-    let organizers = getOrganizers();
-    const initialLength = organizers.length;
-    // Filter cu parseInt
-    organizers = organizers.filter(o => o.id !== parseInt(req.params.id));
-    
-    if (organizers.length < initialLength) {
-        saveOrganizers(organizers);
-        res.status(204).send();
-    } else {
-        res.status(404).json({ message: "Organizer not found" });
+// GET /api/organizers/:id
+exports.getOrganizer = async (req, res) => {
+    try {
+        const organizer = await organizerService.getOrganizerById(req.params.id);
+        if (!organizer) {
+            return res.status(404).json({ message: 'Organizatorul nu a fost găsit' });
+        }
+        res.json(organizer);
+    } catch (error) {
+        res.status(500).json({ message: 'Eroare la obținerea organizatorului', error: error.message });
+    }
+};
+
+// POST /api/organizers
+exports.createOrganizer = async (req, res) => {
+    try {
+        const newOrganizer = await organizerService.createOrganizer(req.body);
+        res.status(201).json(newOrganizer);
+    } catch (error) {
+        res.status(400).json({ message: 'Eroare la crearea organizatorului', error: error.message });
+    }
+};
+
+// PUT /api/organizers/:id
+exports.updateOrganizer = async (req, res) => {
+    try {
+        const updatedOrganizer = await organizerService.updateOrganizer(req.params.id, req.body);
+        if (!updatedOrganizer) {
+            return res.status(404).json({ message: 'Organizatorul nu a fost găsit' });
+        }
+        res.json(updatedOrganizer);
+    } catch (error) {
+        res.status(400).json({ message: 'Eroare la actualizarea organizatorului', error: error.message });
+    }
+};
+
+// DELETE /api/organizers/:id
+exports.deleteOrganizer = async (req, res) => {
+    try {
+        const deletedOrganizer = await organizerService.deleteOrganizer(req.params.id);
+        if (!deletedOrganizer) {
+            return res.status(404).json({ message: 'Organizatorul nu a fost găsit' });
+        }
+        res.status(204).send(); // Răspuns fără conținut pentru ștergere reușită
+    } catch (error) {
+        res.status(500).json({ message: 'Eroare la ștergerea organizatorului', error: error.message });
     }
 };
