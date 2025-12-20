@@ -19,4 +19,8 @@ router.post("/:id/register", eventsController.registerForEvent);
 // GET /api/events/:id/participants (Vezi participanți)
 router.get("/:id/participants", eventsController.getParticipants);
 
+router.put("/:id", eventsController.updateEvent); // Adăugat pentru Editare
+
+router.delete("/:id", eventsController.deleteEvent); // Adăugat pentru Ștergere
+
 module.exports = router;

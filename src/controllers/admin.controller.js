@@ -1,39 +1,61 @@
 const eventsService = require('../services/events.service');
 const utilityService = require('../services/utility.service');
+const Event = require('../models/Event');
 
 // --- EXISTING CODE (Păstrează ce ai deja) ---
-exports.getDashboardStats = (req, res) => {
-    const report = utilityService.generateCentralReport();
-    const stats = {
-        approvedEvents: report.totalEvents,
-        totalParticipants: report.totalRegistrations,
-        averageParticipants: Math.round(report.totalRegistrations / (report.totalEvents || 1)),
-        pendingEvents: eventsService.getAllEvents().filter(e => e.status === 'PENDING').length
-    };
-    res.json(stats);
+exports.getDashboardStats = async (req, res) => {
+    try {
+        // Preluăm toate evenimentele pentru calcul
+        const allEvents = await Event.find({});
+
+        const approvedEvents = allEvents.filter(e => e.status === 'APPROVED');
+        const pendingEventsCount = allEvents.filter(e => e.status === 'PENDING').length;
+        
+        // Calculăm numărul total de participanți la evenimentele aprobate
+        const totalParticipants = approvedEvents.reduce((sum, event) => 
+            sum + (event.participants ? event.participants.length : 0), 0);
+
+        const averageParticipants = approvedEvents.length > 0 
+            ? Math.round(totalParticipants / approvedEvents.length) 
+            : 0;
+
+        res.json({
+            approvedEvents: approvedEvents.length,
+            totalParticipants,
+            averageParticipants,
+            pendingEvents: pendingEventsCount
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Eroare la calcularea statisticilor", error: err.message });
+    }
 };
 
-exports.getPendingEvents = (req, res) => {
-    const allEvents = eventsService.getAllEvents();
-    const pending = allEvents.filter(e => e.status === 'PENDING');
-    res.json(pending);
+// Preia toate evenimentele cu statusul PENDING
+exports.getPendingEvents = async (req, res) => {
+    try {
+        // Trebuie să ne asigurăm că serviciul primește obiectul de filtru corect
+        // și că serviciul NU suprascrie acest status în interior
+        const pendingEvents = await eventsService.getEvents({ status: "PENDING", isAdmin: true });
+        res.json(pendingEvents);
+    } catch (err) {
+        res.status(500).json({ message: "Eroare la preluarea evenimentelor în așteptare.", error: err.message });
+    }
 };
 
-exports.updateEventStatus = (req, res) => {
+// Actualizează statusul unui eveniment (Aprobare/Respingere)
+exports.validateEvent = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status } = req.body; // Așteaptă "APPROVED" sau "REJECTED"
 
-    if (!['APPROVED', 'REJECTED'].includes(status)) {
-        return res.status(400).json({ message: "Status invalid." });
+    try {
+        const updatedEvent = await eventsService.updateEventStatus(id, status);
+        if (!updatedEvent) {
+            return res.status(404).json({ message: "Evenimentul nu a fost găsit." });
+        }
+        res.json({ message: `Evenimentul a fost ${status === 'APPROVED' ? 'aprobat' : 'respins'}.`, event: updatedEvent });
+    } catch (err) {
+        res.status(500).json({ message: "Eroare la validarea evenimentului.", error: err.message });
     }
-
-    const updatedEvent = eventsService.updateEventStatus(id, status);
-    
-    if (!updatedEvent) {
-        return res.status(404).json({ message: "Evenimentul nu a fost găsit." });
-    }
-
-    res.json({ message: `Status actualizat la ${status}`, event: updatedEvent });
 };
 
 // --- COD NOU (ADAUGĂ ASTA LA FINAL) ---

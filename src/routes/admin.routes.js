@@ -2,8 +2,10 @@
 
 const express = require("express");
 const router = express.Router();
+const adminController = require("../controllers/admin.controller");
 
-// Lăsăm intenționat gol pentru a izola problema de erorile de controller/service.
+router.get("/stats", adminController.getDashboardStats);
+router.get("/pending-events", adminController.getPendingEvents);
+router.patch("/events/:id/validate", adminController.validateEvent);
 
-// EXPORTUL ESTE CRITIC: Asigură-te că folosești exact această linie
 module.exports = router;

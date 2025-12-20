@@ -1,5 +1,6 @@
 // src/services/events.service.js
 // NOU: Importăm modelul Event Mongoose
+const mongoose = require('mongoose');
 const Event = require('../models/Event');
 // Am păstrat notificationService, dar vom elimina celelalte importuri vechi
 // const notificationService = require('./notification.service');
@@ -19,31 +20,50 @@ exports.getAllEvents = async () => {
 
 // NOU: Funcția de filtrare (folosește puterea MongoDB)
 exports.getEvents = async (filters) => {
-    const query = { status: 'APPROVED' }; // Filtru implicit: doar evenimentele aprobate
+    const query = {};
 
+    // 1. GESTIONARE STATUS ȘI ROLURI
+    if (filters.status) {
+        // Dacă s-a cerut un status specific (ex: PENDING pentru admin), îl folosim
+        query.status = filters.status;
+    } else if (filters.organizerId && filters.organizerId !== "") {
+        // Pentru organizator, arătăm tot (fără filtru de status implicit)
+        try {
+            query.organizerId = new mongoose.Types.ObjectId(filters.organizerId);
+        } catch (err) {
+            console.error("ID Organizator invalid:", filters.organizerId);
+        }
+    } else {
+        // Implicit pentru studenți, arătăm doar cele aprobate
+        query.status = 'APPROVED';
+    }
+    
+    // 2. FILTRE CATEGORIE / FACULTATE
     if (filters.type && filters.type !== "") {
-        // Căutare exactă pe câmpul 'type'
         query.type = new RegExp('^' + filters.type + '$', 'i'); 
     }
     if (filters.faculty && filters.faculty !== "") {
-        // Căutare parțială pe câmpul 'faculty'
         query.faculty = new RegExp(filters.faculty, 'i');
     }
+
+    // 3. SEARCH TEXT
     if (filters.q ) {
-        const q = new RegExp(filters.q, 'i'); // Regex 'i' pentru case-insensitive
-        // Căutare pe Titlu SAU Descriere (folosim operatorul $or)
+        const q = new RegExp(filters.q, 'i');
         query.$or = [{ title: q }, { description: q }];
     }
 
-    // EXECUTĂM INTEROGAREA CORECT
     try {
-        const eventsList = await Event.find(query).populate('organizerId');
-        // Returnăm array-ul sau un array gol dacă e null
+        // Sortăm după data creării (cele mai noi primele)
+        const eventsList = await Event.find(query)
+            .populate('organizerId', 'name') // Cerem explicit câmpul 'name' din User
+            .sort({ createdAt: -1 });
+            
         return eventsList || [];
     } catch (error) {
         console.error("Eroare la interogarea bazei de date:", error);
-        throw error; // Trimitem eroarea mai departe către controller
-    }};
+        throw error;
+    }
+};
 
 // NOU: Găsirea după ID (folosește _id Mongoose)
 exports.getEventById = async (id) => {
@@ -51,32 +71,42 @@ exports.getEventById = async (id) => {
     return await Event.findById(id).populate('organizerId'); 
 };
 
-// NOU: Crearea unui eveniment
 exports.createEvent = async (data) => {
-    // Eliminăm logica complexă de generare a ID-ului numeric
-    // MongoDB generează _id automat.
+    // 1. Conversie corectă din zz.ll.aaaa în obiect Date valid
+    let finalDate;
+    if (typeof data.date === 'string' && data.date.includes('.')) {
+        const [day, month, year] = data.date.split('.');
+        finalDate = new Date(`${year}-${month}-${day}`);
+    } else {
+        finalDate = new Date(data.date);
+    }
+
+    // Verificăm dacă data rezultată este validă
+    if (isNaN(finalDate.getTime())) {
+        throw new Error("Data evenimentului este invalidă.");
+    }
+
+    // 2. Gestionare maxParticipants (Trebuie să fie > 0 sau undefined dacă e gol)
+    const parsedParticipants = parseInt(data.maxParticipants);
+    const maxParticipants = (parsedParticipants > 0) ? parsedParticipants : undefined;
 
     const newEventData = {
-        // ATENȚIE: data.organizer trebuie să fie _id-ul Organizatorului, nu numele!
-        organizerId: data.organizerId, // Presupunem că primești ID-ul, nu numele
+        organizerId: data.organizerId,
         title: data.title,
         description: data.description,
-        type: data.type,
+        type: data.type || data.category, // Mapare automată
         faculty: data.faculty,
         department: data.department || "",
         location: data.location,
-        date: new Date(data.date), // Conversie explicită la Date
+        date: finalDate, // Folosim variabila procesată corect
         startTime: data.startTime,
         endTime: data.endTime || "",
-        maxParticipants: parseInt(data.maxParticipants) || 0,
+        maxParticipants: maxParticipants, // Trimitem undefined dacă nu avem o valoare validă (>0)
         status: "PENDING",
         image: data.imageUrl || null
-        // 'registered', 'participants' și 'reviews' sunt inițializate în model
     };
     
-    // Inserăm evenimentul în baza de date
-    const newEvent = await Event.create(newEventData);
-    return newEvent;
+    return await Event.create(newEventData);
 };
 
 // NOU: Înregistrarea la eveniment

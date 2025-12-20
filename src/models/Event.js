@@ -36,12 +36,13 @@ const eventSchema = new mongoose.Schema({
     endTime: String,
     maxParticipants: {
         type: Number,
+        required: false,
         min: 1
     },
     // Relația cheie: referință la _id-ul Organizatorului
     organizerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organizer', // Face referință la modelul Organizer
+        ref: 'User', // Face referință la modelul Organizer
         required: true
     },
     status: {

@@ -1,14 +1,15 @@
 const eventsService = require("../services/events.service");
+const Event = require("../models/Event");
 
-// GET /events (Modificat: adăugat async/await)
+// GET /events
 exports.getEvents = async (req, res) => {
-    const { type, faculty, q } = req.query;
+    // MODIFICARE: Adaugă organizerId aici pentru a-l prelua din URL
+    const { type, faculty, q, organizerId } = req.query; 
     try {
-        // Așteptăm rezultatul interogării MongoDB
-        const events = await eventsService.getEvents({ type, faculty, q });
+        // Trimite organizerId către serviciu
+        const events = await eventsService.getEvents({ type, faculty, q, organizerId });
         res.json(events || []);
     } catch (err) {
-        // Logarea erorii complete este utilă pentru debug
         console.error("Eroare la getEvents:", err); 
         res.status(500).json([]);
     }
@@ -84,5 +85,67 @@ exports.getParticipants = async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ message: "Eroare la obținerea participanților.", error: err.message });
+    }
+};
+
+// PUT /api/events/:id
+exports.updateEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = { ...req.body };
+
+        // 1. Preluăm evenimentul actual din bază pentru a-i verifica statusul
+        const currentEvent = await Event.findById(id);
+        if (!currentEvent) return res.status(404).json({ message: "Eveniment negăsit" });
+
+        // 2. Logică Status: 
+        // Dacă evenimentul este REJECTED, îl trimitem înapoi în PENDING la editare.
+        // Dacă este APPROVED, își păstrează statusul (nu intră în pending).
+        if (currentEvent.status === "REJECTED") {
+            updateData.status = "PENDING";
+        } else {
+            // Menținem statusul actual (ex: APPROVED rămâne APPROVED)
+            updateData.status = currentEvent.status;
+        }
+
+        // 1. Prevenim transformarea organizerId în null dacă lipsește din body
+        if (updateData.organizerId === null || updateData.organizerId === "") {
+            delete updateData.organizerId;
+        }
+
+        // 2. Mapare sigură category -> type
+        if (updateData.category) updateData.type = updateData.category;
+
+        // 3. Procesare robustă pentru dată
+        if (updateData.date) {
+            const dateStr = String(updateData.date);
+            if (dateStr.includes('.')) {
+                const [d, m, y] = dateStr.split('.');
+                updateData.date = new Date(`${y}-${m}-${d}`);
+            } else {
+                updateData.date = new Date(dateStr);
+            }
+        }
+
+        const updated = await Event.findByIdAndUpdate(id, updateData, { 
+            new: true, 
+            runValidators: true 
+        });
+
+        if (!updated) return res.status(404).json({ message: "Eveniment negăsit" });
+        res.json(updated);
+    } catch (err) {
+        res.status(400).json({ message: "Eroare la actualizare", error: err.message });
+    }
+};
+
+// DELETE /api/events/:id
+exports.deleteEvent = async (req, res) => {
+    try {
+        const deleted = await Event.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ message: "Eveniment negăsit" });
+        res.status(200).json({ message: "Șters cu succes" });
+    } catch (err) {
+        res.status(500).json({ message: "Eroare la ștergere", error: err.message });
     }
 };

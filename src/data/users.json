@@ -19,5 +19,12 @@
     "email": "admin@univ.ro",
     "password": "Admin.IP.2025",
     "role": "ADMIN"
+  },
+  {
+    "id": 4,
+    "name": "Asociația Studenților",
+    "email": "contact@asociatie.ro",
+    "password": "hashed_password_4",
+    "role": "ORGANIZER"
   }
 ]

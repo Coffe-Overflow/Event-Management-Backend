@@ -1,22 +1,32 @@
 const eventsService = require('../services/events.service');
+const Event = require("../models/Event");
 
-// GET /organizer/stats
-exports.getOrganizerStats = (req, res) => {
-    // Într-o implementare reală cu JWT, am lua ID-ul din req.user.id
-    // Aici simulăm că primim organizerId ca query param sau header pentru testare
-    const organizerId = req.query.organizerId; // ex: ?organizerId=u2
+exports.getOrganizerStats = async (req, res) => {
+    try {
+        const { organizerId } = req.query;
 
-    const allEvents = eventsService.getAllEvents();
-    const myEvents = allEvents.filter(e => e.organizerId === organizerId); // Asigură-te că ai organizerId în events.json
+        if (!organizerId) {
+            return res.status(400).json({ message: "ID-ul organizatorului lipsește." });
+        }
 
-    const totalParticipants = myEvents.reduce((sum, e) => sum + (e.participants ? e.participants.length : 0), 0);
+        const events = await Event.find({ organizerId });
 
-    res.json({
-        totalEvents: myEvents.length,
-        totalParticipants: totalParticipants,
-        averageParticipants: myEvents.length ? (totalParticipants / myEvents.length).toFixed(2) : 0,
-        pendingApproval: myEvents.filter(e => e.status === 'PENDING').length
-    });
+        // Calculăm datele
+        const totalEvents = events.length;
+        const pendingApproval = events.filter(e => e.status === "PENDING").length;
+        const totalParticipants = events.reduce((acc, curr) => acc + (curr.participants?.length || 0), 0);
+        const averageParticipants = totalEvents > 0 ? Math.round(totalParticipants / totalEvents) : 0;
+
+        // IMPORTANT: Cheile de mai jos trebuie să fie identice cu cele din interfață
+        res.json({
+            totalEvents,          // Frontend: stats.totalEvents
+            totalParticipants,    // Frontend: stats.totalParticipants
+            averageParticipants,  // Frontend: stats.averageParticipants
+            pendingApproval       // Frontend: stats.pendingApproval
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Eroare server", error: err.message });
+    }
 };
 
 // PATCH /organizer/checkin/:qrCode
