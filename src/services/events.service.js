@@ -86,6 +86,10 @@ exports.createEvent = async (data) => {
         throw new Error("Data evenimentului este invalidă.");
     }
 
+    if (finalDate < new Date().setHours(0,0,0,0)) {
+        throw new Error("Nu poți crea un eveniment în trecut.");
+    }
+
     // 2. Gestionare maxParticipants (Trebuie să fie > 0 sau undefined dacă e gol)
     const parsedParticipants = parseInt(data.maxParticipants);
     const maxParticipants = (parsedParticipants > 0) ? parsedParticipants : undefined;
