@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // ************************************************************
 // NOU: Setezi URI-ul MongoDB direct în cod (NU este recomandat pentru producție)
-const MONGO_URI = 'mongodb://127.0.0.1:27017/eventManagementDB'; 
+const MONGO_URI = process.env.MONGO_URI;
 // Asigură-te că folosești URI-ul corect pentru baza ta de date!
 // ************************************************************
 
