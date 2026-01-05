@@ -7,7 +7,7 @@ const fs = require('fs');      // <--- NOU
 const path = require('path');  // <--- NOU
 
 // Variabile de mediu
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 //const MONGO_URI = process.env.MONGO_URI; // Adaugat: Variabila URI din .env
 
 // ************************************************************
