@@ -1,106 +1,104 @@
 const Event = require('../models/Event');
 const notificationService = require('./notification.service');
 
-exports.getAllEvents = async () => {
-    return await Event.find({}).populate('organizerId'); 
-};
+exports.getEvents = async (filters = {}) => {
+  const query = { status: 'APPROVED' };
 
-exports.getEvents = async (filters) => {
-    const query = { status: 'APPROVED' }; 
+  if (filters.type) {
+    query.type = new RegExp(`^${filters.type}$`, 'i');
+  }
 
-    if (filters.type) {
-        query.type = new RegExp('^' + filters.type + '$', 'i'); 
-    }
-    if (filters.faculty) {
-        query.faculty = new RegExp(filters.faculty, 'i');
-    }
-    if (filters.q) {
-        const q = new RegExp(filters.q, 'i'); 
-        query.$or = [{ title: q }, { description: q }];
-    }
-    return await Event.find(query).populate('organizerId');
+  if (filters.faculty) {
+    query.faculty = new RegExp(filters.faculty, 'i');
+  }
+
+  if (filters.q) {
+    const q = new RegExp(filters.q, 'i');
+    query.$or = [{ title: q }, { description: q }];
+  }
+
+  return Event.find(query);
 };
 
 exports.getEventById = async (id) => {
-    return await Event.findById(id).populate('organizerId'); 
+  return Event.findById(id);
 };
 
-exports.createEvent = async (data) => {
 
-    const newEventData = {
-        organizerId: data.organizerId, 
-        title: data.title,
-        description: data.description,
-        type: data.type,
-        faculty: data.faculty,
-        department: data.department || "",
-        location: data.location,
-        date: new Date(data.date),
-        startTime: data.startTime,
-        endTime: data.endTime || "",
-        maxParticipants: parseInt(data.maxParticipants) || 0,
-        status: "PENDING",
-        image: data.imageUrl || null
-    };
-    const newEvent = await Event.create(newEventData);
-    return newEvent;
+exports.createEvent = async (data, organizerId) => {
+  const event = new Event({
+    organizerId,
+    title: data.title,
+    description: data.description,
+    type: data.type,
+    faculty: data.faculty,
+    department: data.department || '',
+    location: data.location,
+    date: new Date(data.date),
+    startTime: data.startTime,
+    endTime: data.endTime || '',
+    maxParticipants: Number(data.maxParticipants) || 0,
+    status: 'PENDING',
+    image: data.image || null,
+    participants: []
+  });
+
+  return event.save();
 };
 
-exports.registerForEvent = async (eventId, participantData) => {
-    const event = await Event.findById(eventId); 
+exports.registerForEvent = async (eventId, user) => {
+  const event = await Event.findById(eventId);
 
-    if (!event) return { error: "Event not found" };
-    const currentParticipants = event.participants.length;
+  if (!event) {
+    return { error: 'Event not found' };
+  }
 
-    if (event.maxParticipants && (currentParticipants >= event.maxParticipants)) {
-        return { error: "Event is full" };
-    }
-    if (event.participants.some(p => p.email.toLowerCase() === participantData.email.toLowerCase())) {
-        return { error: "Participant already registered" };
-    }
-    const ticketCode = `QR-${eventId}-${Date.now()}`;
-    const newParticipant = { 
-        ...participantData, 
-        ticketCode, 
-        isCheckedIn: false, 
-        registrationDate: new Date()
-    };
-    event.participants.push(newParticipant);
-    await event.save(); 
+  if (
+    event.maxParticipants > 0 &&
+    event.participants.length >= event.maxParticipants
+  ) {
+    return { error: 'Event is full' };
+  }
 
-    notificationService.sendRegistrationConfirmation(participantData.email, event.title);
-    return { success: true, ticket: newParticipant, ...event.toObject({ virtuals: true }) }; 
+  const alreadyRegistered = event.participants.some(
+    p => p.userId?.toString() === user.id
+  );
+
+  if (alreadyRegistered) {
+    return { error: 'Already registered' };
+  }
+
+  const ticketCode = `QR-${event._id}-${Date.now()}`;
+
+  const participant = {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    ticketCode,
+    isCheckedIn: false,
+    registrationDate: new Date()
+  };
+
+  event.participants.push(participant);
+  await event.save();
+
+  try {
+    await notificationService.sendRegistrationConfirmation(
+      user.email,
+      event.title
+    );
+  } catch (e) {
+    console.warn('Email not sent:', e.message);
+  }
+
+  return {
+    success: true,
+    ticketCode
+  };
 };
 
 exports.getParticipants = async (eventId) => {
-    const event = await Event.findById(eventId); 
-    if (!event) return { error: "Event not found" };
-    return event.participants;
-};
-
-exports.updateEventStatus = async (id, status) => {
-    const updatedEvent = await Event.findByIdAndUpdate(
-        id, 
-        { status: status }, 
-        { new: true } 
-    );
-    return updatedEvent;
-};
-
-exports.checkInByQR = async (qrCodeString) => {
-    const event = await Event.findOne({ 'participants.ticketCode': qrCodeString });
-
-    if (!event) {
-        return { success: false, message: "Bilet invalid." };
-    }
-    const participant = event.participants.find(p => p.ticketCode === qrCodeString);
-    const pIndex = event.participants.findIndex(p => p.ticketCode === qrCodeString);
-
-    if (participant.isCheckedIn) {
-        return { success: false, message: "Check-in deja efectuat." };
-    }
-    event.participants[pIndex].isCheckedIn = true;
-    await event.save(); 
-
-    return { success: true, student: participant.name, eventTitle: event.title };
+  const event = await Event.findById(eventId);
+  if (!event) return { error: 'Event not found' };
+  return event.participants;
 };
