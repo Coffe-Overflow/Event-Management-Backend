@@ -1,10 +1,7 @@
-// src/controllers/utility.controller.js
 const multer = require('multer'); 
 const path = require('path'); 
-// Presupunem că utility.service.js exportă generateCentralReport
 const utilityService = require('../services/utility.service'); 
 
-// --- Configurare Multer (Upload) ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/'); 
@@ -20,8 +17,6 @@ const uploadMiddleware = multer({
     limits: { fileSize: 5 * 1024 * 1024 } 
 });
 
-// --- 1. Handler pentru Upload ---
-// Express acceptă un array de middleware-uri ca handler
 const uploadMaterial = [
     uploadMiddleware.single('material'), 
     (req, res) => {
@@ -39,7 +34,6 @@ const uploadMaterial = [
     }
 ];
 
-// --- 2. Handler pentru Raport ---
 const generateReport = async (req, res) => {
     try {
         const reportData = await utilityService.generateCentralReport();
@@ -50,7 +44,6 @@ const generateReport = async (req, res) => {
     }
 };
 
-// EXPORTUL CORECT: Toate funcțiile sunt exportate într-un obiect
 module.exports = {
     uploadMaterial,
     generateReport

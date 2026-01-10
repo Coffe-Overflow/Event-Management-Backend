@@ -1,7 +1,6 @@
 const eventsService = require('../services/events.service');
 const utilityService = require('../services/utility.service');
 
-// --- EXISTING CODE (Păstrează ce ai deja) ---
 exports.getDashboardStats = (req, res) => {
     const report = utilityService.generateCentralReport();
     const stats = {
@@ -36,10 +35,8 @@ exports.updateEventStatus = (req, res) => {
     res.json({ message: `Status actualizat la ${status}`, event: updatedEvent });
 };
 
-// --- COD NOU (ADAUGĂ ASTA LA FINAL) ---
 
 exports.getReportTimeline = (req, res) => {
-    // Date fictive pentru graficul "Evoluția ultimelor 6 luni"
     res.json([
         { month: "Iun 2025", eventsCount: 2, participantsCount: 150 },
         { month: "Iul 2025", eventsCount: 0, participantsCount: 0 },
@@ -51,7 +48,6 @@ exports.getReportTimeline = (req, res) => {
 };
 
 exports.getReportCategories = (req, res) => {
-    // Date fictive pentru graficul "Distribuție pe tipuri"
     res.json([
         { category: "Academic", count: 200 },
         { category: "Social", count: 450 },
@@ -62,7 +58,6 @@ exports.getReportCategories = (req, res) => {
 };
 
 exports.getReportFaculties = (req, res) => {
-    // Date fictive pentru top facultăți
     res.json([
         { facultyName: "Toate facultățile", participantsCount: 1298 },
         { facultyName: "Informatică", participantsCount: 201 }

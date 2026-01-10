@@ -1,13 +1,11 @@
 const eventsService = require('../services/events.service');
 
-// GET /organizer/stats
 exports.getOrganizerStats = (req, res) => {
-    // Într-o implementare reală cu JWT, am lua ID-ul din req.user.id
-    // Aici simulăm că primim organizerId ca query param sau header pentru testare
-    const organizerId = req.query.organizerId; // ex: ?organizerId=u2
+
+    const organizerId = req.query.organizerId; 
 
     const allEvents = eventsService.getAllEvents();
-    const myEvents = allEvents.filter(e => e.organizerId === organizerId); // Asigură-te că ai organizerId în events.json
+    const myEvents = allEvents.filter(e => e.organizerId === organizerId); 
 
     const totalParticipants = myEvents.reduce((sum, e) => sum + (e.participants ? e.participants.length : 0), 0);
 
@@ -19,12 +17,8 @@ exports.getOrganizerStats = (req, res) => {
     });
 };
 
-// PATCH /organizer/checkin/:qrCode
 exports.checkInParticipant = (req, res) => {
     const { qrCode } = req.params;
-    
-    // Logica de check-in: Căutăm participantul după codul QR în toate evenimentele
-    // QR-ul ar trebui să fie unic (ex: generatedString)
     
     const result = eventsService.checkInByQR(qrCode);
 

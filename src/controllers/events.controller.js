@@ -1,31 +1,24 @@
 const eventsService = require("../services/events.service");
 
-// GET /events (Modificat: adăugat async/await)
 exports.getEvents = async (req, res) => {
     const { type, faculty, q } = req.query;
     try {
-        // Așteptăm rezultatul interogării MongoDB
         const events = await eventsService.getEvents({ type, faculty, q });
         res.json(events);
     } catch (err) {
-        // Logarea erorii complete este utilă pentru debug
         console.error("Eroare la getEvents:", err); 
         res.status(500).json({ message: "Eroare la filtrarea evenimentelor.", error: err.message });
     }
 };
 
-// GET /events/:id (Modificat: adăugat async/await)
 exports.getEventById = async (req, res) => {
     try {
-        // Așteptăm rezultatul interogării MongoDB
         const event = await eventsService.getEventById(req.params.id);
         
         if (!event) return res.status(404).json({ message: "Event not found" });
-        
-        // Folosim .toObject({ virtuals: true }) pentru a include câmpul 'registered'
+
         res.json(event.toObject({ virtuals: true })); 
     } catch (err) {
-        // Dacă ID-ul nu este un format valid de ObjectId, Mongoose aruncă o eroare
         if (err.kind === 'ObjectId') {
              return res.status(404).json({ message: "ID Eveniment invalid." });
         }
@@ -33,19 +26,17 @@ exports.getEventById = async (req, res) => {
     }
 };
 
-// POST /events (Modificat: adăugat async/await)
 exports.createEvent = async (req, res) => {
     try {
-        // Așteptăm salvarea noului eveniment în DB
+
         const event = await eventsService.createEvent(req.body);
         res.status(201).json(event);
     } catch (err) {
-        // Mongoose aruncă eroare 400 dacă datele sunt invalide (ex: câmp lipsă)
+
         res.status(400).json({ message: "Eroare la crearea evenimentului. Verificați datele.", error: err.message });
     }
 };
 
-// POST /events/:id/register (Modificat: adăugat async/await)
 exports.registerForEvent = async (req, res) => {
     const eventId = req.params.id;
     const { name, email, studentId } = req.body;
@@ -54,7 +45,6 @@ exports.registerForEvent = async (req, res) => {
         return res.status(400).json({ message: "Numele și emailul sunt obligatorii." });
     }
 
-    // Așteptăm rezultatul interogării MongoDB
     const result = await eventsService.registerForEvent(eventId, { name, email, studentId });
 
     if (result.error) {
@@ -70,10 +60,8 @@ exports.registerForEvent = async (req, res) => {
     });
 };
 
-// GET /events/:id/participants (Modificat: adăugat async/await)
 exports.getParticipants = async (req, res) => {
     try {
-        // Așteptăm rezultatul interogării MongoDB
         const event = await eventsService.getEventById(req.params.id); 
         
         if (!event) return res.status(404).json({ message: "Event not found" });

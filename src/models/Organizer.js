@@ -1,25 +1,23 @@
-// src/models/Organizer.js
 const mongoose = require('mongoose');
 
 const organizerSchema = new mongoose.Schema({
-    // MongoDB va genera automat _id
     name: {
         type: String,
         required: true,
-        unique: true, // Numele organizației este unic
+        unique: true, 
         trim: true
     },
-    email: { // Email-ul de contact al organizației
+    email: { 
         type: String,
         required: true,
         unique: true,
         lowercase: true
     },
-    contactPerson: { // Persoana de contact din cadrul organizației
+    contactPerson: { 
         type: String,
         required: true
     },
-    eventsOrganized: { // Acest câmp va fi menținut momentan, deși în MongoDB poate fi calculat
+    eventsOrganized: { 
         type: Number,
         default: 0
     }
@@ -27,6 +25,5 @@ const organizerSchema = new mongoose.Schema({
     timestamps: true 
 }); 
 
-// Mongoose va crea colecția 'organizers'
 const Organizer = mongoose.model('Organizer', organizerSchema);
 module.exports = Organizer;

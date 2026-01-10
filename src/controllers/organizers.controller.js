@@ -1,7 +1,5 @@
-// src/controllers/organizers.controller.js
-const organizerService = require('../services/organizers.service'); // Importăm serviciul
+const organizerService = require('../services/organizers.service'); 
 
-// GET /api/organizers
 exports.listOrganizers = async (req, res) => {
     try {
         const organizers = await organizerService.getAllOrganizers();
@@ -11,7 +9,6 @@ exports.listOrganizers = async (req, res) => {
     }
 };
 
-// GET /api/organizers/:id
 exports.getOrganizer = async (req, res) => {
     try {
         const organizer = await organizerService.getOrganizerById(req.params.id);
@@ -24,7 +21,6 @@ exports.getOrganizer = async (req, res) => {
     }
 };
 
-// POST /api/organizers
 exports.createOrganizer = async (req, res) => {
     try {
         const newOrganizer = await organizerService.createOrganizer(req.body);
@@ -34,7 +30,6 @@ exports.createOrganizer = async (req, res) => {
     }
 };
 
-// PUT /api/organizers/:id
 exports.updateOrganizer = async (req, res) => {
     try {
         const updatedOrganizer = await organizerService.updateOrganizer(req.params.id, req.body);
@@ -47,14 +42,13 @@ exports.updateOrganizer = async (req, res) => {
     }
 };
 
-// DELETE /api/organizers/:id
 exports.deleteOrganizer = async (req, res) => {
     try {
         const deletedOrganizer = await organizerService.deleteOrganizer(req.params.id);
         if (!deletedOrganizer) {
             return res.status(404).json({ message: 'Organizatorul nu a fost găsit' });
         }
-        res.status(204).send(); // Răspuns fără conținut pentru ștergere reușită
+        res.status(204).send(); 
     } catch (error) {
         res.status(500).json({ message: 'Eroare la ștergerea organizatorului', error: error.message });
     }

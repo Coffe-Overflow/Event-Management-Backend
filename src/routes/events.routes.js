@@ -1,22 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const eventsController = require("../controllers/events.controller");
+const authMiddleware = require("../middleware/auth.middleware");
 
-// Asigură-te că aceste nume (getEvents, getEventById, etc.) există în controller!
 
-// GET /api/events (Listare)
 router.get("/", eventsController.getEvents);
-
-// GET /api/events/:id (Detalii)
 router.get("/:id", eventsController.getEventById);
 
-// POST /api/events (Creare - pentru organizatori)
-router.post("/", eventsController.createEvent);
 
-// POST /api/events/:id/register (Înscriere student)
-router.post("/:id/register", eventsController.registerForEvent);
-
-// GET /api/events/:id/participants (Vezi participanți)
-router.get("/:id/participants", eventsController.getParticipants);
+router.post("/:id/register", authMiddleware, eventsController.registerForEvent);
+router.post("/", authMiddleware, eventsController.createEvent);
+router.get("/:id/participants", authMiddleware, eventsController.getParticipants);
 
 module.exports = router;

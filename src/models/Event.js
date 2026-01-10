@@ -1,17 +1,15 @@
-// src/models/Event.js
 const mongoose = require('mongoose');
 
-// --- SUB-SCHEMA: Participanți ---
 const participantSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
-    studentId: String, // ID-ul studentului
+    studentId: String, 
     ticketCode: String,
     isCheckedIn: { type: Boolean, default: false },
     registrationDate: { type: Date, default: Date.now }
-}, { _id: false }); // Fără _id separat pentru sub-documente, dacă nu este necesar
+}, { _id: false }); 
 
-// --- SUB-SCHEMA: Recenzii ---
+
 const reviewSchema = new mongoose.Schema({
     user: { type: String, required: true },
     rating: { type: Number, min: 1, max: 5 },
@@ -19,7 +17,6 @@ const reviewSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now }
 }, { _id: false });
 
-// --- SCHEMA PRINCIPALĂ: Eveniment ---
 const eventSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -31,17 +28,16 @@ const eventSchema = new mongoose.Schema({
     faculty: String,
     department: String,
     location: { type: String, required: true },
-    date: { type: Date, required: true }, // Combinăm date și orele într-un singur Date field (sau le lăsăm separate)
+    date: { type: Date, required: true }, 
     startTime: String,
     endTime: String,
     maxParticipants: {
         type: Number,
         min: 1
     },
-    // Relația cheie: referință la _id-ul Organizatorului
     organizerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organizer', // Face referință la modelul Organizer
+        ref: 'Organizer', 
         required: true
     },
     status: {
@@ -50,20 +46,14 @@ const eventSchema = new mongoose.Schema({
         default: 'PENDING'
     },
     image: String,
-    
-    // Sub-documente
     reviews: [reviewSchema],
     participants: [participantSchema],
-
-    // Câmp virtual pentru "registered" (număr calculat)
-    // Vom elimina câmpul 'registered' din salvare, el va fi calculat automat
 }, {
     timestamps: true,
-    toJSON: { virtuals: true }, // Permite afișarea câmpului virtual când convertim la JSON
+    toJSON: { virtuals: true }, 
     toObject: { virtuals: true } 
 });
 
-// Adaugăm o proprietate virtuală pentru 'registered'
 eventSchema.virtual('registered').get(function() {
     return this.participants.length;
 });

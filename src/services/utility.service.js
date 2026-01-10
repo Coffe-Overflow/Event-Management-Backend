@@ -3,7 +3,6 @@ const path = require('path');
 const eventsPath = path.join(__dirname, '../data/events.json'); 
 const organizersPath = path.join(__dirname, '../data/organizers.json');
 
-// --- Utilități de Citire a Datelor ---
 const getEventsData = () => {
     try {
         const data = fs.readFileSync(eventsPath, 'utf8');
@@ -26,26 +25,16 @@ const getOrganizersData = () => {
     }
 };
 
-// --- Logica de Generare a Raportului ---
 exports.generateCentralReport = () => {
     const events = getEventsData();
     const organizers = getOrganizersData();
-
-    // 1. Calculăm Numărul Total de Evenimente
     const totalEvents = events.length;
-
-    // 2. Calculăm Numărul Total de Organizatori
     const totalOrganizers = organizers.length;
 
-    // 3. Calculăm Numărul Total de Înregistrări
     const totalRegistrations = events.reduce((sum, event) => sum + event.registered, 0);
-
-    // 4. Identificăm Cel Mai Popular Eveniment
     const mostPopularEvent = events.reduce((prev, current) => {
         return (prev.registered > current.registered) ? prev : current;
     }, { registered: -1 });
-
-    // 5. Identificăm Top Organizator (cel cu cele mai multe evenimente)
     const organizerCounts = events.reduce((acc, event) => {
         const name = event.organizer;
         acc[name] = (acc[name] || 0) + 1;
@@ -61,7 +50,6 @@ exports.generateCentralReport = () => {
         }
     }
 
-    // Returnăm Raportul Final
     return {
         title: "Raport Centralizat de Management",
         dateGenerated: new Date().toISOString().split('T')[0],

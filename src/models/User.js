@@ -1,18 +1,16 @@
-// src/models/User.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    // MongoDB generează automat un _id
     name: {
         type: String,
         required: true,
-        trim: true // Elimină spațiile albe la început și la sfârșit
+        trim: true 
     },
     email: {
         type: String,
         required: true,
-        unique: true, // Asigură că nu există două adrese de email identice
-        lowercase: true // Stochează email-ul cu litere mici
+        unique: true, 
+        lowercase: true 
     },
     password: {
         type: String,
@@ -20,13 +18,12 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['STUDENT', 'ORGANIZER', 'ADMIN'], // Limitează valorile posibile
+        enum: ['STUDENT', 'ORGANIZER', 'ADMIN'], 
         default: 'STUDENT'
     }
 }, { 
-    timestamps: true // Adaugă câmpurile 'createdAt' și 'updatedAt'
+    timestamps: true 
 }); 
 
-// Mongoose va crea colecția 'users' (pluralul lui 'User')
 const User = mongoose.model('User', userSchema);
 module.exports = User;
