@@ -1,5 +1,6 @@
 const eventsService = require('../services/events.service');
 const utilityService = require('../services/utility.service');
+const Organizer = require("../models/Organizer");
 
 exports.getDashboardStats = (req, res) => {
     const report = utilityService.generateCentralReport();
@@ -35,6 +36,32 @@ exports.updateEventStatus = (req, res) => {
     res.json({ message: `Status actualizat la ${status}`, event: updatedEvent });
 };
 
+exports.createOrganizer = async (req, res) => {
+  try {
+    const { userId, name, email, contactPerson } = req.body;
+
+    if (!userId || !name || !email || !contactPerson) {
+      return res.status(400).json({
+        message: "Toate câmpurile sunt obligatorii"
+      });
+    }
+
+    const organizer = await Organizer.create({
+      userId,
+      name,
+      email,
+      contactPerson,
+      eventsOrganized: 0
+    });
+
+    res.status(201).json(organizer);
+  } catch (error) {
+    res.status(500).json({
+      message: "Eroare la crearea organizatorului",
+      error: error.message
+    });
+  }
+};
 
 exports.getReportTimeline = (req, res) => {
     res.json([
