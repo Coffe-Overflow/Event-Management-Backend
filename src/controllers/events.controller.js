@@ -37,25 +37,56 @@ exports.createEvent = async (req, res) => {
     }
 };
 
+const Event = require("../models/Event");
+
 exports.registerForEvent = async (req, res) => {
   try {
-    const result = await eventsService.registerForEvent(
-      req.params.id,
-      req.user
-    );
+    const { id } = req.params;
+    const { name, email, studentId } = req.body;
 
-    if (result.error) {
-      return res.status(400).json({ message: result.error });
+    if (!name || !email) {
+      return res.status(400).json({
+        message: "Numele și emailul sunt obligatorii."
+      });
     }
 
-    res.status(200).json(result);
-  } catch (err) {
+    const event = await Event.findById(id);
+    if (!event) {
+      return res.status(404).json({ message: "Evenimentul nu există." });
+    }
+
+    const alreadyRegistered = event.participants.some(
+      p => p.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (alreadyRegistered) {
+      return res.status(400).json({
+        message: "Ești deja înscris la acest eveniment."
+      });
+    }
+
+    event.participants.push({
+      name,
+      email,
+      studentId
+    });
+
+    await event.save();
+
+    res.status(200).json({
+      message: "Înscriere realizată cu succes.",
+      registered: event.participants.length
+    });
+
+  } catch (error) {
+    console.error("Register error:", error);
     res.status(500).json({
-      message: 'Eroare la înscrierea la eveniment',
-      error: err.message
+      message: "Eroare la înscrierea la eveniment.",
+      error: error.message
     });
   }
 };
+
 
 exports.getParticipants = async (req, res) => {
     try {
