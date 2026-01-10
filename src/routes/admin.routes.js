@@ -4,7 +4,7 @@ const adminController = require("../controllers/admin.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
 router.post(
-  "/organizer",
+  "/organizers",
   authMiddleware,
   adminController.createOrganizer
 );
