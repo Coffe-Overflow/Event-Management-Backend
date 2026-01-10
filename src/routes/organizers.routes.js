@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const organizersController = require('../controllers/organizers.controller'); 
-const authMiddleware = require('../middleware/auth.middleware');
 
-router.get(
-  "/events",
-  authMiddleware,
-  organizerDashboardController.getMyEvents
-);
+const organizersController = require("../controllers/organizers.controller");
+const organizerDashboardController = require("../controllers/organizer-dashboard.controller");
+const authMiddleware = require("../middleware/auth.middleware");
+
+
+router.get("/events", authMiddleware, organizerDashboardController.getMyEvents);
 
 router.get("/", organizersController.listOrganizers);
 
