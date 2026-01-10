@@ -16,7 +16,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use("/api/events", eventsRouter);
-app.use("/api/organizers", organizersRouter);
+app.use("/api/organizer", organizersRouter);
 
 const testRouter = express.Router();
 testRouter.get('/test', (req, res) => res.status(200).send('Router de Test OK'));
