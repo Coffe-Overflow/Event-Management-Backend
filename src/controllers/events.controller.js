@@ -38,27 +38,48 @@ exports.createEvent = async (req, res) => {
 };
 
 exports.registerForEvent = async (req, res) => {
-    const eventId = req.params.id;
-    const { name, email, studentId } = req.body;
+    try {
+        const eventId = req.params.id;
+        const user = req.user;
 
-    if (!name || !email) {
-        return res.status(400).json({ message: "Numele și emailul sunt obligatorii." });
+        if (!user || !user.id) {
+            return res.status(401).json({ message: "Utilizator neautentificat." });
+        }
+
+        const participantData = {
+            name: user.name,
+            email: user.email,
+            studentId: user.id
+        };
+
+        const result = await eventsService.registerForEvent(eventId, participantData);
+
+        if (result.error) {
+            if (result.error === "Event not found")
+                return res.status(404).json({ message: "Evenimentul nu a fost găsit." });
+
+            if (result.error === "Event is full")
+                return res.status(403).json({ message: "Evenimentul este complet." });
+
+            if (result.error === "Participant already registered")
+                return res.status(409).json({ message: "Sunteți deja înscris." });
+
+            return res.status(500).json({ message: result.error });
+        }
+
+        res.status(200).json({
+            message: "Înscriere reușită!",
+            ticket: result.ticket
+        });
+    } catch (err) {
+        console.error("REGISTER EVENT ERROR:", err);
+        res.status(500).json({
+            message: "Eroare la înscrierea la eveniment.",
+            error: err.message
+        });
     }
-
-    const result = await eventsService.registerForEvent(eventId, { name, email, studentId });
-
-    if (result.error) {
-        if (result.error === "Event not found") return res.status(404).json({ message: "Evenimentul nu a fost găsit." });
-        if (result.error === "Event is full") return res.status(403).json({ message: "Evenimentul este complet." });
-        if (result.error === "Participant already registered") return res.status(409).json({ message: "Sunteți deja înscris." });
-        return res.status(500).json({ message: result.error });
-    }
-
-    res.status(200).json({
-        message: "Înscriere reușită!",
-        ticket: result.ticket
-    });
 };
+
 
 exports.getParticipants = async (req, res) => {
     try {
