@@ -105,3 +105,66 @@ exports.getParticipants = async (req, res) => {
         res.status(500).json({ message: "Eroare la obținerea participanților.", error: err.message });
     }
 };
+
+exports.addReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user.id;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        message: "Rating-ul trebuie să fie între 1 și 5."
+      });
+    }
+
+    const event = await Event.findById(id);
+    if (!event) {
+      return res.status(404).json({ message: "Eveniment inexistent." });
+    }
+
+    const alreadyReviewed = event.reviews.some(
+      r => r.userId.toString() === userId
+    );
+
+    if (alreadyReviewed) {
+      return res.status(400).json({
+        message: "Ai lăsat deja o recenzie la acest eveniment."
+      });
+    }
+
+    event.reviews.push({
+      rating,
+      comment,
+      userId
+    });
+
+    await event.save();
+
+    res.status(201).json({
+      message: "Recenzie adăugată cu succes."
+    });
+  } catch (error) {
+    console.error("ADD REVIEW ERROR:", error);
+    res.status(500).json({
+      message: "Eroare la adăugarea recenziei."
+    });
+  }
+};
+
+exports.getEventReviews = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate("reviews.userId", "name");
+
+    if (!event) {
+      return res.status(404).json({ message: "Eveniment inexistent." });
+    }
+
+    res.json(event.reviews);
+  } catch (error) {
+    res.status(500).json({
+      message: "Eroare la obținerea recenziilor."
+    });
+  }
+};
