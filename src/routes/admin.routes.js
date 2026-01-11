@@ -15,6 +15,7 @@ router.get("/reports/categories", authMiddleware, roleMiddleware("ADMIN"), admin
 router.get("/reports/faculties", authMiddleware, roleMiddleware("ADMIN"), adminController.getEventsByFaculty);
 
 router.patch("/users/:id/role", authMiddleware, roleMiddleware("ADMIN"), adminController.updateUserRole);
+router.get("/users",authMiddleware,roleMiddleware("ADMIN"),adminController.getAllUsers);
 
 
 module.exports = router;

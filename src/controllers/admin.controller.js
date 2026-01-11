@@ -186,3 +186,18 @@ exports.updateUserRole = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find()
+      .select("name email role faculty createdAt") 
+      .sort({ createdAt: -1 });
+
+    res.json(users);
+  } catch (error) {
+    console.error("ADMIN GET USERS ERROR:", error);
+    res.status(500).json({
+      message: "Eroare la obținerea utilizatorilor."
+    });
+  }
+};
