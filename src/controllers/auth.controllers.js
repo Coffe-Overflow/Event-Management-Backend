@@ -36,6 +36,9 @@ const token = `fake-jwt-token-for-${user._id}`;
     console.error("Login Error:", error);
     res.status(500).json({ message: "Eroare internă la autentificare." });
   }
+console.log("LOGIN BODY:", req.body);
+console.log("EMAIL:", email);
+console.log("PASSWORD:", password);
 };
 
 exports.register = async (req, res) => {
@@ -77,6 +80,3 @@ exports.logout = (req, res) => {
     res.status(200).json({ message: "Logout realizat cu succes." });
 };
 
-console.log("LOGIN BODY:", req.body);
-console.log("EMAIL:", email);
-console.log("PASSWORD:", password);
