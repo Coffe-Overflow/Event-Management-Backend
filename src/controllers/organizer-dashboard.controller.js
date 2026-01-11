@@ -57,3 +57,21 @@ exports.getMyEvents = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.createEvent = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const event = await organizerService.createEventForOrganizer(
+      userId,
+      req.body
+    );
+
+    res.status(201).json(event);
+  } catch (error) {
+    res.status(400).json({
+      message: "Failed to create event",
+      error: error.message
+    });
+  }
+};
