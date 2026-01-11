@@ -37,8 +37,6 @@ exports.checkInParticipant = (req, res) => {
     }
 };
 
-const organizerService = require("../services/organizers.service");
-
 exports.getMyEvents = async (req, res) => {
   try {
     const userId = req.user.id;
