@@ -1,5 +1,6 @@
 const eventsService = require('../services/events.service');
 const Organizer = require("../models/Organizer");
+const organizerService = require("../services/organizers.service");
 const Event = require("../models/Event");
 
 exports.getOrganizerStats = (req, res) => {
@@ -36,25 +37,19 @@ exports.checkInParticipant = (req, res) => {
     }
 };
 
+const organizerService = require("../services/organizers.service");
+
 exports.getMyEvents = async (req, res) => {
   try {
-
     const userId = req.user.id;
 
-    const organizer = await Organizer.findOne({ userId });
+    const events = await organizerService.getEventsForOrganizer(userId);
 
-    if (!organizer) {
-      return res.status(404).json({
-        message: "Organizer not found for this user"
-      });
-    }
-
-    const events = await Event.find({ organizerId: organizer._id });
-
-    return res.json(events);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res.json(events);
+  } catch (error) {
+    res.status(404).json({
+      message: "Organizer not found for this user"
+    });
   }
 };
 
