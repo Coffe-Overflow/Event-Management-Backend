@@ -22,7 +22,6 @@ module.exports = async (req, res, next) => {
       return res.status(401).json({ message: "User inexistent." });
     }
 
-    // 🔥 AICI ESTE CHEIA
     req.user = {
       id: user._id,
       role: user.role,
