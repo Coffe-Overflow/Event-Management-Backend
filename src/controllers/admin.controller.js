@@ -93,3 +93,74 @@ exports.updateEventStatus = async (req, res) => {
     });
   }
 };
+
+exports.getEventsTimeline = async (req, res) => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+
+    const data = await Event.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
+          },
+          total: { $sum: 1 }
+        }
+      },
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1
+        }
+      }
+    ]);
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getEventsByCategory = async (req, res) => {
+  try {
+    const data = await Event.aggregate([
+      {
+        $group: {
+          _id: "$type",
+          total: { $sum: 1 }
+        }
+      }
+    ]);
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getEventsByFaculty = async (req, res) => {
+  try {
+    const data = await Event.aggregate([
+      {
+        $group: {
+          _id: "$faculty",
+          total: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { total: -1 }
+      }
+    ]);
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
