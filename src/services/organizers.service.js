@@ -3,63 +3,55 @@ const Event = require("../models/Event");
 
 
 async function getAllOrganizers() {
-  return await Organizer.find({});
+  return Organizer.find({});
 }
 
 async function getOrganizerById(id) {
-  return await Organizer.findById(id);
+  return Organizer.findById(id);
 }
 
 async function getOrganizerByUserId(userId) {
-  return await Organizer.findOne({ userId });
+  return Organizer.findOne({ userId });
 }
 
-async function createOrganizer(organizerData) {
-  return await Organizer.create({
-    ...organizerData,
-    eventsOrganized: organizerData.eventsOrganized || 0
+async function createOrganizer(data) {
+  return Organizer.create({
+    ...data,
+    eventsOrganized: data.eventsOrganized || 0
   });
 }
 
-async function updateOrganizer(id, updateData) {
-  return await Organizer.findByIdAndUpdate(id, updateData, { new: true });
+async function updateOrganizer(id, data) {
+  return Organizer.findByIdAndUpdate(id, data, { new: true });
 }
 
 async function deleteOrganizer(id) {
-  return await Organizer.findByIdAndDelete(id);
+  return Organizer.findByIdAndDelete(id);
 }
 
 
 async function getEventsForOrganizer(userId) {
   const organizer = await Organizer.findOne({ userId });
+  if (!organizer) throw new Error("Organizer not found");
 
-  if (!organizer) {
-    throw new Error("Organizer not found for this user");
-  }
-
-  return await Event.find({ organizer: organizer.name });
+  return Event.find({ organizer: organizer._id });
 }
 
 async function createEventForOrganizer(userId, eventData) {
   const organizer = await Organizer.findOne({ userId });
-
-  if (!organizer) {
-    throw new Error("Organizer not found for this user");
-  }
+  if (!organizer) throw new Error("Organizer not found");
 
   const lastEvent = await Event.findOne().sort({ id: -1 });
   const nextId = lastEvent ? lastEvent.id + 1 : 1;
 
-  const event = new Event({
+  const event = await Event.create({
     ...eventData,
     id: nextId,
-    organizer: organizer.name,
+    organizer: organizer._id,  
     status: "PENDING",
     registered: 0,
     participants: []
   });
-
-  await event.save();
 
   organizer.eventsOrganized += 1;
   await organizer.save();
@@ -67,43 +59,31 @@ async function createEventForOrganizer(userId, eventData) {
   return event;
 }
 
-async function updateEventForOrganizer(userId, eventId, updateData) {
+async function updateEventForOrganizer(userId, eventId, data) {
   const organizer = await Organizer.findOne({ userId });
+  if (!organizer) throw new Error("Organizer not found");
 
-  if (!organizer) {
-    throw new Error("Organizer not found for this user");
-  }
+  const event = await Event.findOneAndUpdate(
+    { id: eventId, organizer: organizer._id },
+    data,
+    { new: true }
+  );
 
-  const event = await Event.findOne({
-    id: eventId,
-    organizer: organizer.name
-  });
-
-  if (!event) {
-    throw new Error("Event not found or not owned by organizer");
-  }
-
-  Object.assign(event, updateData);
-  await event.save();
+  if (!event) throw new Error("Event not found or not owned by organizer");
 
   return event;
 }
 
 async function deleteEventForOrganizer(userId, eventId) {
   const organizer = await Organizer.findOne({ userId });
-
-  if (!organizer) {
-    throw new Error("Organizer not found for this user");
-  }
+  if (!organizer) throw new Error("Organizer not found");
 
   const event = await Event.findOneAndDelete({
     id: eventId,
-    organizer: organizer.name
+    organizer: organizer._id
   });
 
-  if (!event) {
-    throw new Error("Event not found or not owned by organizer");
-  }
+  if (!event) throw new Error("Event not found or not owned by organizer");
 
   organizer.eventsOrganized = Math.max(0, organizer.eventsOrganized - 1);
   await organizer.save();
@@ -114,12 +94,9 @@ async function deleteEventForOrganizer(userId, eventId) {
 
 async function getOrganizerStats(userId) {
   const organizer = await Organizer.findOne({ userId });
+  if (!organizer) throw new Error("Organizer not found");
 
-  if (!organizer) {
-    throw new Error("Organizer not found for this user");
-  }
-
-  const events = await Event.find({ organizer: organizer.name });
+  const events = await Event.find({ organizer: organizer._id });
 
   return {
     organizer: organizer.name,
