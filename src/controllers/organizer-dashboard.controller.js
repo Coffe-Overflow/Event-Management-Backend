@@ -132,7 +132,7 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-exports.getEventParticipants = async (req, res) => {
+const getEventParticipants = async (req, res) => {
   try {
     const userId = req.user.id;
     const eventId = req.params.id;
@@ -161,11 +161,12 @@ exports.getEventParticipants = async (req, res) => {
 
 
 
+
 module.exports = {
   getOrganizerStats,
   getMyEvents,
   createEvent,
   updateEvent,
   deleteEvent,
-  getEventParticipants  
+  getEventParticipants
 };
