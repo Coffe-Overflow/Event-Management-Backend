@@ -46,7 +46,16 @@ const eventSchema = new mongoose.Schema({
         default: 'PENDING'
     },
     image: String,
-    reviews: [reviewSchema],
+    reviews: [
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    name: String,
+    email: String,
+    rating: { type: Number, min: 1, max: 5 },
+    comment: String,
+    createdAt: { type: Date, default: Date.now }
+  }
+],
     participants: [participantSchema],
 }, {
     timestamps: true,
