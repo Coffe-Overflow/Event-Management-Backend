@@ -2,6 +2,7 @@ const eventsService = require('../services/events.service');
 const Organizer = require("../models/Organizer");
 const organizerService = require("../services/organizers.service");
 const Event = require("../models/Event");
+const { Parser } = require("json2csv");
 
 const getOrganizerStats = async (req, res) => {
   try {
@@ -159,6 +160,48 @@ const getEventParticipants = async (req, res) => {
   }
 };
 
+const exportParticipantsCSV = async (req, res) => {
+  try {
+    const organizer = await Organizer.findOne({ userId: req.user.id });
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer not found" });
+    }
+
+    const event = await Event.findOne({
+      _id: req.params.id,
+      organizerId: organizer._id
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found or not owned by organizer"
+      });
+    }
+
+    if (!event.participants.length) {
+      return res.status(400).json({
+        message: "No participants to export"
+      });
+    }
+
+    const fields = [
+      { label: "Name", value: "name" },
+      { label: "Email", value: "email" },
+      { label: "Student ID", value: "studentId" },
+      { label: "Checked In", value: "isCheckedIn" },
+      { label: "Registration Date", value: "registrationDate" }
+    ];
+
+    const parser = new Parser({ fields });
+    const csv = parser.parse(event.participants);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment(`participants-${event._id}.csv`);
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 
 
@@ -168,5 +211,6 @@ module.exports = {
   createEvent,
   updateEvent,
   deleteEvent,
-  getEventParticipants
+  getEventParticipants,
+  exportParticipantsCSV
 };
