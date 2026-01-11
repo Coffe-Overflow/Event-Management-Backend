@@ -88,17 +88,29 @@ exports.registerForEvent = async (req, res) => {
 };
 
 
-exports.getParticipants = async (req, res) => {
-    try {
-        const event = await eventsService.getEventById(req.params.id); 
-        
-        if (!event) return res.status(404).json({ message: "Event not found" });
-        
-        res.json({
-            eventTitle: event.title,
-            participants: event.participants || []
-        });
-    } catch (err) {
-        res.status(500).json({ message: "Eroare la obținerea participanților.", error: err.message });
+exports.getEventParticipants = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const eventId = req.params.id;
+
+    const organizer = await Organizer.findOne({ userId });
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer not found" });
     }
+
+    const event = await Event.findOne({
+      _id: eventId,
+      organizerId: organizer._id
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found or not owned by organizer"
+      });
+    }
+
+    res.json(event.participants);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
