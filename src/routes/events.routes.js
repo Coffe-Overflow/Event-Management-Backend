@@ -12,7 +12,7 @@ router.post("/:id/register", authMiddleware, eventsController.registerForEvent);
 router.post("/", authMiddleware, eventsController.createEvent);
 router.get("/:id/participants", authMiddleware, eventsController.getParticipants);
 
-router.post("/events/:id/reviews",authMiddleware,eventsController.addReview);
-router.get("/events/:id/reviews",eventsController.getEventReviews);
+router.post("/:id/reviews",authMiddleware,eventsController.addReview);
+router.get("/:id/reviews",eventsController.getEventReviews);
 
 module.exports = router;
