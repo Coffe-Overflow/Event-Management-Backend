@@ -35,16 +35,24 @@ exports.getDashboardStats = async (req, res) => {
 };
 
 
-exports.getPendingEvents = async (req, res) => {
+exports.getEventsByStatus = async (req, res) => {
   try {
-    const events = await Event.find({ status: "PENDING" }).sort({
-      createdAt: -1
-    });
+    const { status } = req.query;
+
+    const allowedStatuses = ["PENDING", "APPROVED", "REJECTED"];
+
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Status invalid. Folosește PENDING, APPROVED sau REJECTED"
+      });
+    }
+
+    const events = await Event.find({ status }).sort({ createdAt: -1 });
 
     res.json(events);
   } catch (error) {
     res.status(500).json({
-      message: "Eroare la obținerea evenimentelor în așteptare",
+      message: "Eroare la obținerea evenimentelor după status",
       error: error.message
     });
   }

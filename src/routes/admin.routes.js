@@ -6,8 +6,7 @@ const authMiddleware = require("../middleware/auth.middleware");
 
 
 router.get("/stats/dashboard",authMiddleware,adminController.getDashboardStats);
-
-router.get("/events/pending",authMiddleware,adminController.getPendingEvents);
-
+router.get("/events",authMiddleware,adminController.getEventsByStatus);
 router.patch("/events/:id/status",authMiddleware,adminController.updateEventStatus);
+
 module.exports = router;
