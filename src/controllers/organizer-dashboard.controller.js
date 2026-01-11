@@ -37,34 +37,122 @@ exports.checkInParticipant = (req, res) => {
     }
 };
 
-exports.getMyEvents = async (req, res) => {
+const getMyEvents = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const events = await organizerService.getEventsForOrganizer(userId);
+    const organizer = await Organizer.findOne({ userId });
+    if (!organizer) {
+      return res.status(404).json({
+        message: "Organizer not found for this user"
+      });
+    }
+
+    const events = await Event.find({
+      organizer: organizer.name
+    });
 
     res.json(events);
-  } catch (error) {
-    res.status(404).json({
-      message: "Organizer not found for this user"
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const createEvent = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const organizer = await Organizer.findOne({ userId });
+    if (!organizer) {
+      return res.status(404).json({
+        message: "Organizer not found for this user"
+      });
+    }
+
+    const event = new Event({
+      ...req.body,
+      organizer: organizer.name,
+      status: "PENDING",
+      registered: 0
+    });
+
+    await event.save();
+
+    res.status(201).json(event);
+  } catch (err) {
+    res.status(400).json({
+      message: "Failed to create event",
+      error: err.message
     });
   }
 };
 
-exports.createEvent = async (req, res) => {
+
+const updateEvent = async (req, res) => {
   try {
     const userId = req.user.id;
+    const eventId = req.params.id;
 
-    const event = await organizerService.createEventForOrganizer(
-      userId,
-      req.body
+    const organizer = await Organizer.findOne({ userId });
+    if (!organizer) {
+      return res.status(404).json({
+        message: "Organizer not found for this user"
+      });
+    }
+
+    const event = await Event.findOneAndUpdate(
+      { _id: eventId, organizer: organizer.name },
+      req.body,
+      { new: true }
     );
 
-    res.status(201).json(event);
-  } catch (error) {
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found or not owned by organizer"
+      });
+    }
+
+    res.json(event);
+  } catch (err) {
     res.status(400).json({
-      message: "Failed to create event",
-      error: error.message
+      message: "Failed to update event",
+      error: err.message
     });
   }
+};
+
+const deleteEvent = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const eventId = req.params.id;
+
+    const organizer = await Organizer.findOne({ userId });
+    if (!organizer) {
+      return res.status(404).json({
+        message: "Organizer not found for this user"
+      });
+    }
+
+    const event = await Event.findOneAndDelete({
+      _id: eventId,
+      organizer: organizer.name
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found or not owned by organizer"
+      });
+    }
+
+    res.json({ message: "Event deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  getMyEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent
 };

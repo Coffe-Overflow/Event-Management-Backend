@@ -5,17 +5,10 @@ const organizersController = require("../controllers/organizers.controller");
 const organizerDashboardController = require("../controllers/organizer-dashboard.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
-router.get("/events",authMiddleware,organizerDashboardController.getMyEvents
-);
-
-router.post("/events",authMiddleware,organizerDashboardController.createEvent
-);
-
-router.put("/events/:id",authMiddleware,organizerDashboardController.updateEvent
-);
-
-router.delete("/events/:id",authMiddleware,organizerDashboardController.deleteEvent
-);
+router.get("/events", authMiddleware, organizerDashboardController.getMyEvents);
+router.post("/events", authMiddleware, organizerDashboardController.createEvent);
+router.put("/events/:id", authMiddleware, organizerDashboardController.updateEvent);
+router.delete("/events/:id", authMiddleware, organizerDashboardController.deleteEvent);
 
 router.get("/", organizersController.listOrganizers);
 router.get("/:id", organizersController.getOrganizer);
