@@ -5,6 +5,8 @@ const organizersController = require("../controllers/organizers.controller");
 const organizerDashboardController = require("../controllers/organizer-dashboard.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
+router.get("/stats",authMiddleware,organizerDashboardController.getOrganizerStats);
+
 router.get("/events", authMiddleware, organizerDashboardController.getMyEvents);
 router.post("/events", authMiddleware, organizerDashboardController.createEvent);
 router.put("/events/:id", authMiddleware, organizerDashboardController.updateEvent);
