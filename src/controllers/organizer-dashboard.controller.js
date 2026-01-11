@@ -203,6 +203,49 @@ const exportParticipantsCSV = async (req, res) => {
   }
 };
 
+const checkInParticipant = async (req, res) => {
+  try {
+    const organizer = await Organizer.findOne({ userId: req.user.id });
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer not found" });
+    }
+
+    const event = await Event.findOne({
+      organizerId: organizer._id,
+      "participants.ticketCode": req.params.qrCode
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Participant or event not found"
+      });
+    }
+
+    const participant = event.participants.find(
+      p => p.ticketCode === req.params.qrCode
+    );
+
+    if (participant.isCheckedIn) {
+      return res.status(400).json({
+        message: "Participant already checked in"
+      });
+    }
+
+    participant.isCheckedIn = true;
+    await event.save();
+
+    res.json({
+      message: "Check-in successful",
+      participant: {
+        name: participant.name,
+        email: participant.email
+      },
+      event: event.title
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 
 module.exports = {
@@ -212,5 +255,6 @@ module.exports = {
   updateEvent,
   deleteEvent,
   getEventParticipants,
-  exportParticipantsCSV
+  exportParticipantsCSV,
+  checkInParticipant
 };

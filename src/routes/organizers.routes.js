@@ -16,6 +16,8 @@ router.get("/events/:id/participants",authMiddleware,organizerDashboardControlle
 
 router.get("/events/:id/participants/export",authMiddleware,organizerDashboardController.exportParticipantsCSV);
 
+router.patch("/checkin/:qrCode",authMiddleware,organizerDashboardController.checkInParticipant);
+
 
 router.get("/", organizersController.listOrganizers);
 router.get("/:id", organizersController.getOrganizer);

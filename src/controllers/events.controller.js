@@ -1,5 +1,6 @@
 const eventsService = require("../services/events.service");
 
+
 exports.getEvents = async (req, res) => {
     const { type, faculty, q } = req.query;
     try {
@@ -65,10 +66,12 @@ exports.registerForEvent = async (req, res) => {
       });
     }
 
+    const ticketCode = crypto.randomUUID();
     event.participants.push({
       name,
       email,
-      studentId
+      studentId,
+      ticketCode
     });
 
     await event.save();
