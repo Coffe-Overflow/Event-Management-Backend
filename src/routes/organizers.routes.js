@@ -11,6 +11,12 @@ router.get("/events",authMiddleware,organizerDashboardController.getMyEvents
 router.post("/events",authMiddleware,organizerDashboardController.createEvent
 );
 
+router.put("/events/:id",authMiddleware,organizerDashboardController.updateEvent
+);
+
+router.delete("/events/:id",authMiddleware,organizerDashboardController.deleteEvent
+);
+
 router.get("/", organizersController.listOrganizers);
 router.get("/:id", organizersController.getOrganizer);
 router.post("/", organizersController.createOrganizer);
