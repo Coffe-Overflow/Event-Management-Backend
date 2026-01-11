@@ -5,13 +5,16 @@ const adminController = require("../controllers/admin.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
 
-router.get("/stats/dashboard",authMiddleware,adminController.getDashboardStats);
+router.get("/stats/dashboard", authMiddleware, roleMiddleware("ADMIN"), adminController.getDashboardStats);
 
-router.get("/events",authMiddleware,adminController.getEventsByStatus);
-router.patch("/events/:id/status",authMiddleware,adminController.updateEventStatus);
+router.get("/events", authMiddleware, roleMiddleware("ADMIN"), adminController.getEventsByStatus);
+router.patch("/events/:id/status", authMiddleware, roleMiddleware("ADMIN"), adminController.updateEventStatus);
 
-router.get("/reports/timeline", authMiddleware, adminController.getEventsTimeline);
-router.get("/reports/categories", authMiddleware, adminController.getEventsByCategory);
-router.get("/reports/faculties", authMiddleware, adminController.getEventsByFaculty);
+router.get("/reports/timeline", authMiddleware, roleMiddleware("ADMIN"), adminController.getEventsTimeline);
+router.get("/reports/categories", authMiddleware, roleMiddleware("ADMIN"), adminController.getEventsByCategory);
+router.get("/reports/faculties", authMiddleware, roleMiddleware("ADMIN"), adminController.getEventsByFaculty);
+
+router.patch("/users/:id/role", authMiddleware, roleMiddleware("ADMIN"), adminController.updateUserRole);
+
 
 module.exports = router;

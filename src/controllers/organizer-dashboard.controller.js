@@ -80,14 +80,14 @@ const updateEvent = async (req, res) => {
   try {
     const organizer = await organizerService.getOrganizerByUserId(req.user.id);
     if (!organizer) {
-      return res.status(404).json({
-        message: "Organizer not found for this user"
-      });
+      return res.status(404).json({ message: "Organizer not found" });
     }
+
+    const { status, ...allowedUpdates } = req.body;
 
     const event = await Event.findOneAndUpdate(
       { _id: req.params.id, organizerId: organizer._id },
-      req.body,
+      allowedUpdates,
       { new: true }
     );
 

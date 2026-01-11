@@ -1,4 +1,6 @@
-module.exports = (req, res, next) => {
+const User = require("../models/User");
+
+module.exports = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -14,7 +16,19 @@ module.exports = (req, res, next) => {
 
     const userId = token.replace("fake-jwt-token-for-", "");
 
-    req.user = { id: userId };
+    const user = await User.findById(userId).select("_id role email");
+
+    if (!user) {
+      return res.status(401).json({ message: "User inexistent." });
+    }
+
+    // 🔥 AICI ESTE CHEIA
+    req.user = {
+      id: user._id,
+      role: user.role,
+      email: user.email
+    };
+
     next();
   } catch (err) {
     console.error("AUTH MIDDLEWARE ERROR:", err);

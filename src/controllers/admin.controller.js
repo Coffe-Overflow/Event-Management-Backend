@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const User = require("../models/User");
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -61,38 +62,31 @@ exports.getEventsByStatus = async (req, res) => {
 
 exports.updateEventStatus = async (req, res) => {
   try {
-    const { id } = req.params;
     const { status } = req.body;
 
-    if (!["APPROVED", "REJECTED"].includes(status)) {
-      return res.status(400).json({
-        message: "Status invalid. Folosește APPROVED sau REJECTED"
-      });
+    if (!["PENDING", "APPROVED", "REJECTED", "FINISHED"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
     }
 
-    const event = await Event.findById(id);
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
 
     if (!event) {
-      return res.status(404).json({
-        message: "Evenimentul nu a fost găsit"
-      });
+      return res.status(404).json({ message: "Event not found" });
     }
 
-    event.status = status;
-    await event.save();
-
     res.json({
-      message: "Status actualizat cu succes",
+      message: "Event status updated successfully",
       event
     });
-
-  } catch (error) {
-    res.status(500).json({
-      message: "Eroare la actualizarea statusului",
-      error: error.message
-    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.getEventsTimeline = async (req, res) => {
   try {
@@ -160,6 +154,34 @@ exports.getEventsByFaculty = async (req, res) => {
     ]);
 
     res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    if (!["STUDENT", "ORGANIZER", "ADMIN"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Role updated successfully",
+      userId: user._id,
+      role: user.role
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
