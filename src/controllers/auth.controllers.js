@@ -76,3 +76,7 @@ exports.register = async (req, res) => {
 exports.logout = (req, res) => {
     res.status(200).json({ message: "Logout realizat cu succes." });
 };
+
+console.log("LOGIN BODY:", req.body);
+console.log("EMAIL:", email);
+console.log("PASSWORD:", password);
