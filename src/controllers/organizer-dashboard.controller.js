@@ -58,35 +58,31 @@ const getMyEvents = async (req, res) => {
   }
 };
 
-const createEvent = async (req, res) => {
+exports.createEvent = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const organizer = await Organizer.findOne({ userId });
+    const organizer = await organizerService.getOrganizerByUserId(userId);
+
     if (!organizer) {
       return res.status(404).json({
         message: "Organizer not found for this user"
       });
     }
-
-    const event = new Event({
+    
+    const event = await Event.create({
       ...req.body,
-      organizer: organizer.name,
-      status: "PENDING",
-      registered: 0
+      organizerId: organizer._id
     });
 
-    await event.save();
-
     res.status(201).json(event);
-  } catch (err) {
+  } catch (error) {
     res.status(400).json({
       message: "Failed to create event",
-      error: err.message
+      error: error.message
     });
   }
 };
-
 
 const updateEvent = async (req, res) => {
   try {

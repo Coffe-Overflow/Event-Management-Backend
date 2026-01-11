@@ -29,6 +29,10 @@ async function deleteOrganizer(id) {
   return Organizer.findByIdAndDelete(id);
 }
 
+async function getOrganizerByUserId(userId) {
+  return Organizer.findOne({ userId });
+}
+
 
 async function getEventsForOrganizer(userId) {
   const organizer = await Organizer.findOne({ userId });
@@ -117,6 +121,7 @@ module.exports = {
   createOrganizer,
   updateOrganizer,
   deleteOrganizer,
+  getOrganizerByUserId,
 
   getEventsForOrganizer,
   createEventForOrganizer,
