@@ -16,6 +16,7 @@ router.get("/reports/faculties", authMiddleware, roleMiddleware("ADMIN"), adminC
 
 router.patch("/users/:id/role", authMiddleware, roleMiddleware("ADMIN"), adminController.updateUserRole);
 router.get("/users",authMiddleware,roleMiddleware("ADMIN"),adminController.getAllUsers);
-
+router.patch("/users/:id",authMiddleware,roleMiddleware("ADMIN"),adminController.updateUser);
+router.delete("/users/:id",authMiddleware,roleMiddleware("ADMIN"),adminController.deleteUser);
 
 module.exports = router;

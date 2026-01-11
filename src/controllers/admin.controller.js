@@ -201,3 +201,66 @@ exports.getAllUsers = async (req, res) => {
     });
   }
 };
+
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, faculty } = req.body;
+
+    // Validare minimă
+    const allowedRoles = ["STUDENT", "ORGANIZER", "ADMIN"];
+    if (role && !allowedRoles.includes(role)) {
+      return res.status(400).json({ message: "Rol invalid." });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      {
+        ...(role && { role }),
+        ...(faculty !== undefined && { faculty })
+      },
+      { new: true }
+    ).select("name email role faculty createdAt");
+
+    if (!user) {
+      return res.status(404).json({ message: "Utilizator inexistent." });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error("ADMIN UPDATE USER ERROR:", error);
+    res.status(500).json({
+      message: "Eroare la actualizarea utilizatorului."
+    });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Protecție: adminul să nu se șteargă pe sine
+    if (req.user.id === id) {
+      return res.status(400).json({
+        message: "Nu îți poți șterge propriul cont."
+      });
+    }
+
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Utilizator inexistent."
+      });
+    }
+
+    res.json({
+      message: "Utilizator șters cu succes."
+    });
+  } catch (error) {
+    console.error("ADMIN DELETE USER ERROR:", error);
+    res.status(500).json({
+      message: "Eroare la ștergerea utilizatorului."
+    });
+  }
+};
