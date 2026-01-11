@@ -12,7 +12,9 @@ router.post("/events", authMiddleware, organizerDashboardController.createEvent)
 router.put("/events/:id", authMiddleware, organizerDashboardController.updateEvent);
 router.delete("/events/:id", authMiddleware, organizerDashboardController.deleteEvent);
 
-router.get("/events/:id/participants",authMiddleware,organizerController.getEventParticipants);
+router.get("/events/:id/participants",authMiddleware,organizerDashboardController.getEventParticipants
+);
+
 
 
 router.get("/", organizersController.listOrganizers);
