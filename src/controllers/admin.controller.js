@@ -1,11 +1,5 @@
 const Event = require("../models/Event");
 
-/**
- * =========================
- * ADMIN DASHBOARD STATS
- * GET /admin/stats/dashboard
- * =========================
- */
 exports.getDashboardStats = async (req, res) => {
   try {
     const approvedEvents = await Event.countDocuments({ status: "APPROVED" });
@@ -40,12 +34,7 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-/**
- * ==========================================
- * LISTA EVENIMENTE ÎN AȘTEPTARE (PENDING)
- * GET /admin/events/pending
- * ==========================================
- */
+
 exports.getPendingEvents = async (req, res) => {
   try {
     const events = await Event.find({ status: "PENDING" }).sort({
@@ -61,13 +50,7 @@ exports.getPendingEvents = async (req, res) => {
   }
 };
 
-/**
- * ==========================================
- * APROBĂ / RESPINGE EVENIMENT
- * PATCH /admin/events/:id/status
- * Body: { status: "APPROVED" | "REJECTED" }
- * ==========================================
- */
+
 exports.updateEventStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -75,15 +58,11 @@ exports.updateEventStatus = async (req, res) => {
 
     if (!["APPROVED", "REJECTED"].includes(status)) {
       return res.status(400).json({
-        message: "Status invalid. Folosește APPROVED sau REJECTED."
+        message: "Status invalid. Folosește APPROVED sau REJECTED"
       });
     }
 
-    const event = await Event.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+    const event = await Event.findById(id);
 
     if (!event) {
       return res.status(404).json({
@@ -91,13 +70,17 @@ exports.updateEventStatus = async (req, res) => {
       });
     }
 
+    event.status = status;
+    await event.save();
+
     res.json({
-      message: `Eveniment ${status === "APPROVED" ? "aprobat" : "respins"} cu succes`,
+      message: "Status actualizat cu succes",
       event
     });
+
   } catch (error) {
     res.status(500).json({
-      message: "Eroare la actualizarea statusului evenimentului",
+      message: "Eroare la actualizarea statusului",
       error: error.message
     });
   }
