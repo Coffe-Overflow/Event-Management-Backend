@@ -91,6 +91,32 @@ exports.registerForEvent = async (req, res) => {
   }
 };
 
+exports.unregisterFromEvent = async (req, res) => {
+  try {
+    const { id } = req.params;    
+    const { email } = req.body;
+    
+    const updatedEvent = await Event.findOneAndUpdate(
+      { _id: id },
+      { 
+        $pull: { participants: { email: email.toLowerCase() } } 
+      },
+      { new: true }
+    );
+
+    if (!updatedEvent) {
+      return res.status(404).json({ message: "Evenimentul nu există." });
+    }
+
+    res.status(200).json({
+      message: "Înscriere anulată cu succes.",
+      registered: updatedEvent.participants.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Eroare la anularea înscrierii." });
+  }
+};
+
 exports.getParticipants = async (req, res) => {
     try {
         const event = await eventsService.getEventById(req.params.id); 
