@@ -39,6 +39,7 @@ exports.createEvent = async (req, res) => {
 };
 
 const Event = require("../models/Event");
+const crypto = require("crypto");
 
 exports.registerForEvent = async (req, res) => {
   try {
@@ -46,40 +47,40 @@ exports.registerForEvent = async (req, res) => {
     const { name, email, studentId } = req.body;
 
     if (!name || !email) {
-      return res.status(400).json({
-        message: "Numele și emailul sunt obligatorii."
-      });
-    }
-
-    const event = await Event.findById(id);
-    if (!event) {
-      return res.status(404).json({ message: "Evenimentul nu există." });
-    }
-
-    const alreadyRegistered = event.participants.some(
-      p => p.email.toLowerCase() === email.toLowerCase()
-    );
-
-    if (alreadyRegistered) {
-      return res.status(400).json({
-        message: "Ești deja înscris la acest eveniment."
-      });
+      return res.status(400).json({ message: "Numele și emailul sunt obligatorii." });
     }
 
     const ticketCode = crypto.randomUUID();
-    event.participants.push({
-      name,
-      email,
-      studentId,
-      ticketCode
-    });
 
-    await event.save();
+    // Încercăm update-ul atomic
+    const updatedEvent = await Event.findOneAndUpdate(
+      {
+        _id: id,
+        "participants.email": { $ne: email.toLowerCase() },
+        $expr: { $lt: [{ $size: "$participants" }, "$maxParticipants"] }
+      },
+      {
+        $push: {
+          participants: { name, email: email.toLowerCase(), studentId, ticketCode }
+        }
+      },
+      { new: true, runValidators: true }
+    );
 
-    res.status(200).json({
-      message: "Înscriere realizată cu succes.",
-      registered: event.participants.length
-    });
+    if (!updatedEvent) {
+      // Dacă a eșuat, verificăm motivul
+      const event = await Event.findById(id);
+      if (!event) return res.status(404).json({ message: "Evenimentul nu există." });
+
+      if (event.participants.some(p => p.email === email.toLowerCase())) {
+        return res.status(400).json({ message: "Ești deja înscris la acest eveniment." });
+      }
+
+      // DACĂ AJUNGE AICI, E CLAR CĂ S-A UMPLUT
+      return res.status(409).json({ message: "CONCURRENCY_FULL" }); // Trimitem un cod special
+    }
+
+    res.status(200).json({ message: "Înscriere realizată cu succes.", registered: updatedEvent.participants.length });
 
   } catch (error) {
     console.error("Register error:", error);
@@ -89,7 +90,6 @@ exports.registerForEvent = async (req, res) => {
     });
   }
 };
-
 
 exports.getParticipants = async (req, res) => {
     try {
