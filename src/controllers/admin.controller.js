@@ -1,5 +1,6 @@
 const Event = require("../models/Event");
 const User = require("../models/User");
+const Organizer = require("../models/Organizer");
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -48,7 +49,7 @@ exports.getEventsByStatus = async (req, res) => {
       });
     }
 
-    const events = await Event.find({ status }).sort({ createdAt: -1 });
+    const events = await Event.find({ status }).populate("organizerId").sort({ createdAt: -1 });
 
     res.json(events);
   } catch (error) {
@@ -162,6 +163,7 @@ exports.getEventsByFaculty = async (req, res) => {
 exports.updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
+    const userId = req.params.id;
 
     if (!["STUDENT", "ORGANIZER", "ADMIN"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
@@ -175,6 +177,23 @@ exports.updateUserRole = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    if (role === "ORGANIZER") {
+      // Verificăm dacă are deja profil de organizator
+      const existingOrganizer = await Organizer.findOne({ userId: user._id });
+      
+      if (!existingOrganizer) {
+        // Creăm profilul de organizator dacă nu există
+        await Organizer.create({
+          userId: user._id,
+          name: user.name || "Nume nespecificat",
+          email: user.email,
+          contactPerson: user.name || "Nume nespecificat",
+          faculty: user.faculty || "Toate facultățile"
+        });
+        console.log(`Profil de organizator creat pentru ${user.email}`);
+      }
     }
 
     res.json({
@@ -242,6 +261,18 @@ exports.deleteUser = async (req, res) => {
       return res.status(400).json({
         message: "Nu îți poți șterge propriul cont."
       });
+    }
+
+    const organizerProfile = await Organizer.findOne({ userId: id });
+
+    if (organizerProfile) {
+      // Ștergem toate evenimentele asociate acestui organizator
+      // În schema Event, evenimentele sunt legate prin câmpul 'organizerId'
+      const deletedEvents = await Event.deleteMany({ organizerId: organizerProfile._id });
+      console.log(`Au fost șterse ${deletedEvents.deletedCount} evenimente ale organizatorului ${id}`);
+
+      // Ștergem profilul de organizator
+      await Organizer.findByIdAndDelete(organizerProfile._id);
     }
 
     const user = await User.findByIdAndDelete(id);

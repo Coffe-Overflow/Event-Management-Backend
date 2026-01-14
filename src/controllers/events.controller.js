@@ -57,7 +57,11 @@ exports.registerForEvent = async (req, res) => {
       {
         _id: id,
         "participants.email": { $ne: email.toLowerCase() },
-        $expr: { $lt: [{ $size: "$participants" }, "$maxParticipants"] }
+        $or: [
+        { maxParticipants: { $exists: false } }, // Dacă nu există limită
+        { maxParticipants: 0 },                  // Sau dacă limita e 0
+        { $expr: { $lt: [{ $size: "$participants" }, "$maxParticipants"] } }
+      ]
       },
       {
         $push: {

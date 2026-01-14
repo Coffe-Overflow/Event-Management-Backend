@@ -67,12 +67,9 @@ eventSchema.virtual('registered').get(function() {
     return this.participants.length;
 });
 
-eventSchema.pre('save', function (next) {
-  if (this.participants.length > this.maxParticipants) {
-    const err = new Error('Evenimentul a atins capacitatea maximă.');
-    next(err);
-  } else {
-    next();
+eventSchema.pre('save', async function () {
+  if (this.maxParticipants && this.participants.length > this.maxParticipants) {
+    throw new Error('Evenimentul a atins capacitatea maximă.');
   }
 });
 

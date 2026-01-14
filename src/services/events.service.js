@@ -37,7 +37,9 @@ exports.createEvent = async (data, organizerId) => {
     date: new Date(data.date),
     startTime: data.startTime,
     endTime: data.endTime || '',
-    maxParticipants: Number(data.maxParticipants) || 0,
+    maxParticipants: data.maxParticipants && Number(data.maxParticipants) > 0 
+      ? Number(data.maxParticipants) 
+      : 9999, // Setează o limită mare dacă nu este specificată
     status: 'PENDING',
     image: data.image || null,
     participants: []
