@@ -67,6 +67,11 @@ eventSchema.virtual('registered').get(function() {
     return this.participants.length;
 });
 
+eventSchema.pre('save', async function () {
+  if (this.maxParticipants && this.participants.length > this.maxParticipants) {
+    throw new Error('Evenimentul a atins capacitatea maximă.');
+  }
+});
 
 const Event = mongoose.model('Event', eventSchema);
 module.exports = Event;

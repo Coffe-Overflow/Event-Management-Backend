@@ -1,5 +1,6 @@
 const Event = require('../models/Event');
 const notificationService = require('./notification.service');
+const crypto = require("crypto");
 
 exports.getEvents = async (filters = {}) => {
   const query = { status: 'APPROVED' };
@@ -37,7 +38,9 @@ exports.createEvent = async (data, organizerId) => {
     date: new Date(data.date),
     startTime: data.startTime,
     endTime: data.endTime || '',
-    maxParticipants: Number(data.maxParticipants) || 0,
+    maxParticipants: data.maxParticipants && Number(data.maxParticipants) > 0 
+      ? Number(data.maxParticipants) 
+      : 9999, // Setează o limită mare dacă nu este specificată
     status: 'PENDING',
     image: data.image || null,
     participants: []
@@ -46,53 +49,60 @@ exports.createEvent = async (data, organizerId) => {
   return event.save();
 };
 
-exports.registerForEvent = async (eventId, user) => {
-  const event = await Event.findById(eventId);
+exports.registerForEvent = async (eventId, userData) => {
+  const { name, email, studentId ,id } = userData;
+  const ticketCode = crypto.randomUUID();
 
-  if (!event) {
-    return { error: 'Event not found' };
-  }
-
-  if (
-    event.maxParticipants > 0 &&
-    event.participants.length >= event.maxParticipants
-  ) {
-    return { error: 'Event is full' };
-  }
-
-  const alreadyRegistered = event.participants.some(
-    p => p.userId?.toString() === user.id
+  // Încercăm update-ul atomic direct în baza de date
+  const updatedEvent = await Event.findOneAndUpdate(
+    {
+      _id: eventId,
+      "participants.email": { $ne: email.toLowerCase() },
+      $or: [
+        { maxParticipants: { $exists: false } },
+        { maxParticipants: 0 },
+        { $expr: { $lt: [{ $size: "$participants" }, "$maxParticipants"] } }
+      ]
+    },
+    {
+      $push: {
+        participants: { 
+          userId: id, 
+          name: name, 
+          email: email.toLowerCase(), 
+          studentId: studentId,
+          ticketCode: ticketCode,
+          isCheckedIn: false,
+          registrationDate: new Date() 
+        }
+      }
+    },
+    { new: true, runValidators: true }
   );
 
-  if (alreadyRegistered) {
-    return { error: 'Already registered' };
-  }
+  // Dacă update-ul a eșuat, investigăm motivul pentru a arunca eroarea corectă
+  if (!updatedEvent) {
+    const event = await Event.findById(eventId);
+    if (!event) throw new Error("EVENT_NOT_FOUND");
 
-  const ticketCode = `QR-${event._id}-${Date.now()}`;
-
-  const participant = {
-    userId: user.id,
-    name: user.name,
-    email: user.email,
-    ticketCode,
-    isCheckedIn: false,
-    registrationDate: new Date()
-  };
-
-  event.participants.push(participant);
-  await event.save();
-
-  try {
-    await notificationService.sendRegistrationConfirmation(
-      user.email,
-      event.title
+    const isAlreadyRegistered = event.participants.some(
+      p => p.email === email.toLowerCase()
     );
-  } catch (e) {
-    console.warn('Email not sent:', e.message);
+    
+    if (isAlreadyRegistered) throw new Error("ALREADY_REGISTERED");
+
+    throw new Error("CONCURRENCY_FULL");
   }
 
+  // Trimitem notificarea (asincron, nu așteptăm după ea pentru a răspunde utilizatorului)
+  /*notificationService.sendRegistrationConfirmation(email, updatedEvent.title)
+    .catch(err => console.warn('Email confirmation failed:', err.message));
+  */
+ 
+  // Returnăm datele necesare pentru controller
   return {
     success: true,
+    registeredCount: updatedEvent.participants.length,
     ticketCode
   };
 };
